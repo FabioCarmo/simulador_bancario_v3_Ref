@@ -5,7 +5,6 @@ models/docs/
 
 # Ignorar arquivos específicos
 models/bancodasnotas.sqlite3
-README.md
 
 # Ignorar todos os arquivos .pyc
 *.pyc
