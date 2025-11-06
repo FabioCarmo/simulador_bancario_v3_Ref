@@ -55,7 +55,10 @@ class DbBanco(Conexao):
             return False
     
     # Realiza a consulta das tabelas por chave primaria
-    def listar_dados(self, indice: tuple, tabela=None):
+    def listar_dados(self, indice: tuple, tabela=None, condicao=None):
+        if tabela == None:
+            return
+
         for ind in range(0, 2):
             if self._TABELAS[ind] not in tabela:
                 return
@@ -64,8 +67,8 @@ class DbBanco(Conexao):
             super().conectar()
         
         try:
-            self._cursor.execute(f"SELECT * FROM {tabela} WHERE ID = ?;", indice)
-            self._cl_conexao.fechar() # Fechar Conexao
+            self._cursor.execute(f"SELECT * FROM {tabela} WHERE {condicao} = ?;", indice)
+            super().fechar()
             return self._cursor.fetchone()
         except:
             self._conexao.rollback()
