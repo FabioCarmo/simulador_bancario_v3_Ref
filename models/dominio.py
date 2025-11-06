@@ -4,17 +4,19 @@ from models.conexaodb import Conexao
 
 # Classe DbBanco para realizar operacoes na base de dados
 
-class DbBanco():
+class DbBanco(Conexao):
 
     def __init__(self):
-        self._conexao = Conexao()
-        self._conexao = self._conexao.conectar()
-        self._cursor = self._conexao.cursor()
+        self._cl_conexao = super() # Instancia objeto da superclasse
+        self._conexao = self._cl_conexao.conectar()
+        self._cursor = self._cl_conexao.cursor
+        self._conectado = self._cl_conexao.dbconectado
     
     # Inserir registros na tabela 'clientes'
-    def inserirCliente(self, dados):
+    def inserirCliente(self, dados: tuple):
         try:
-            self._cursor.execute("INSERT INTO clientes(nome, cpf, data_nascimento, endereco) VALUES(?,?,?,?)", dados)
+            self._cursor.execute("INSERT INTO clientes(nome, cpf, data_nascimento, endereco) \
+                                 VALUES(?,?,?,?)", dados)
             self._conexao.commit()
             return True
         except:
@@ -22,7 +24,7 @@ class DbBanco():
             return False
     
     # inserir registros na tabela 'contas'
-    def inserirConta(self, dados):
+    def inserirConta(self, dados: tuple):
         try:
             self._cursor.execute("INSERT INTO contas(ID, cpf, agencia, conta) VALUES(?,?,?,?)", dados)
             self._conexao.commit()
@@ -31,54 +33,62 @@ class DbBanco():
             self._conexao.rollback()
             return False
     
-    def inserirSaldo(self, indice, valor=float(0.00)):
+    # Inserir registros na tabela 'saldo'
+    def inserirSaldo(self, dados: tuple):
         try: 
-            self._cursor.execute("INSERT INTO saldo(ID, saldo) VALUES(?,?);", (indice, valor))
+            self._cursor.execute("INSERT INTO saldo(ID, saldo) VALUES(?,?);", dados)
+            self._conexao.commit()
+            return True
+        except:
+            self._conexao.rollback()
+            return False
+        
+    # Inserir registros na tabela 'transacao'
+    def inserirTransacao(self, dados: tuple):
+        try: 
+            self._cursor.execute("INSERT INTO transacao(ID, tipo, valor, data) VALUES(?,?,?,?);", dados)
             self._conexao.commit()
             return True
         except:
             self._conexao.rollback()
             return False
     
-    def listarSaldo(self, indice):
+    # Realiza a consulta das tabelas por chave primaria
+    def listar_dados(self, indice: tuple, coluna=None):
+        colunas = ['clientes', 'contas', 'saldo']
+        for ind in range(0, 2):
+            if colunas[ind] not in coluna:
+                return
+            
+        if self._conectado == False:
+            self._cl_conexao.conectar()
+        
         try:
-            self._cursor.execute("SELECT saldo FROM saldo WHERE ID = ?;", indice)
+            self._cursor.execute(f"SELECT {coluna} FROM {coluna} WHERE ID = ?;", indice)
+            self._cl_conexao.fechar() # Fechar Conexao
             return self._cursor.fetchone()
         except:
             self._conexao.rollback()
             return False
     
-    # Retornar os dados da tabela clientes
-    def listarClientes(self, indice = None):
-        if not indice:
-            return None
-        else:
-            self._cursor.execute("SELECT * FROM clientes WHERE cpf = ?", indice)
-            return self._cursor.fetchone()
-
-    # Retornar os dados da tabela contas
-    def listarContas(self, indice=None):
-        if not indice:
-            return None
-        else:
-            if (indice):
-                self._cursor.execute("SELECT * FROM contas WHERE ID = ?;", indice)
-                return self._cursor.fetchone()
-    
     # Excluir registro por chave primaria
-    def excluir_registro(self, indice):
+    def excluir_registro(self, indice: tuple):
 
         tabelas = ["clientes", "contas", "transacao", "saldo"]
         try:
             for tabela in tabelas:
                 self._cursor.execute(f"DELETE FROM {tabela} WHERE ID = ?;", (indice,))
-
-            self._conexao.commit()
+                self._conexao.commit()
             return True
         except Exception:
             self._conexao.rollback()
             return False
-        
-    def normalizar_dados(self):
-        self._cursor.execute("DROP TABLE ")
-        self._conexao.commit()
+    
+    # Deleta a tabela do banco
+    def normalizar_dados(self, tabela=None):
+        try:
+            self._cursor.execute(f"DROP TABLE {tabela}")
+            self._conexao.commit()
+        except:
+            self._conexao.rollback()
+            return False
