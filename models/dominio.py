@@ -14,7 +14,7 @@ class DbBanco(Conexao):
         self._tabelas = ['clientes', 'contas', 'saldo', 'transacao']
     
     # Inserir registros na tabela 'clientes'
-    def inserirCliente(self, dados: tuple):
+    def inserir_cliente(self, dados: tuple):
         try:
             self._cursor.execute("INSERT INTO clientes(nome, cpf, data_nascimento, endereco) \
                                  VALUES(?,?,?,?)", dados)
@@ -25,7 +25,7 @@ class DbBanco(Conexao):
             return False
     
     # inserir registros na tabela 'contas'
-    def inserirConta(self, dados: tuple):
+    def inserir_conta(self, dados: tuple):
         try:
             self._cursor.execute("INSERT INTO contas(ID, cpf, agencia, conta) VALUES(?,?,?,?)", dados)
             self._conexao.commit()
@@ -35,7 +35,7 @@ class DbBanco(Conexao):
             return False
     
     # Inserir registros na tabela 'saldo'
-    def inserirSaldo(self, dados: tuple):
+    def inserir_saldo(self, dados: tuple):
         try: 
             self._cursor.execute("INSERT INTO saldo(ID, saldo) VALUES(?,?);", dados)
             self._conexao.commit()
@@ -45,7 +45,7 @@ class DbBanco(Conexao):
             return False
         
     # Inserir registros na tabela 'transacao'
-    def inserirTransacao(self, dados: tuple):
+    def inserir_transacao(self, dados: tuple):
         try: 
             self._cursor.execute("INSERT INTO transacao(ID, tipo, valor, data) VALUES(?,?,?,?);", dados)
             self._conexao.commit()
