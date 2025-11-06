@@ -7,10 +7,10 @@ from models.conexaodb import Conexao
 class DbBanco(Conexao):
 
     def __init__(self):
-        self._cl_conexao = super() # Instancia objeto da superclasse
-        self._conexao = self._cl_conexao.conectar()
-        self._cursor = self._cl_conexao.cursor
-        self._conectado = self._cl_conexao.dbconectado
+        super().__init__() # Instancia objeto da superclasse
+        self._conexao = super().conectar()
+        self._cursor = super().cursor
+        self._conectado = super().dbconectado
         self._tabelas = ['clientes', 'contas', 'saldo', 'transacao']
     
     # Inserir registros na tabela 'clientes'
@@ -61,7 +61,7 @@ class DbBanco(Conexao):
                 return
             
         if self._conectado == False:
-            self._cl_conexao.conectar()
+            super().conectar()
         
         try:
             self._cursor.execute(f"SELECT * FROM {tabela} WHERE ID = ?;", indice)
