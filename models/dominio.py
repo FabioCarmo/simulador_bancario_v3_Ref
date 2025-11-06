@@ -11,6 +11,7 @@ class DbBanco(Conexao):
         self._conexao = self._cl_conexao.conectar()
         self._cursor = self._cl_conexao.cursor
         self._conectado = self._cl_conexao.dbconectado
+        self._tabelas = ['clientes', 'contas', 'saldo', 'transacao']
     
     # Inserir registros na tabela 'clientes'
     def inserirCliente(self, dados: tuple):
@@ -54,17 +55,16 @@ class DbBanco(Conexao):
             return False
     
     # Realiza a consulta das tabelas por chave primaria
-    def listar_dados(self, indice: tuple, coluna=None):
-        colunas = ['clientes', 'contas', 'saldo']
+    def listar_dados(self, indice: tuple, tabela=None):
         for ind in range(0, 2):
-            if colunas[ind] not in coluna:
+            if self._tabelas[ind] not in tabela:
                 return
             
         if self._conectado == False:
             self._cl_conexao.conectar()
         
         try:
-            self._cursor.execute(f"SELECT {coluna} FROM {coluna} WHERE ID = ?;", indice)
+            self._cursor.execute(f"SELECT * FROM {tabela} WHERE ID = ?;", indice)
             self._cl_conexao.fechar() # Fechar Conexao
             return self._cursor.fetchone()
         except:
@@ -73,10 +73,8 @@ class DbBanco(Conexao):
     
     # Excluir registro por chave primaria
     def excluir_registro(self, indice: tuple):
-
-        tabelas = ["clientes", "contas", "transacao", "saldo"]
         try:
-            for tabela in tabelas:
+            for tabela in self._tabelas:
                 self._cursor.execute(f"DELETE FROM {tabela} WHERE ID = ?;", (indice,))
                 self._conexao.commit()
             return True
