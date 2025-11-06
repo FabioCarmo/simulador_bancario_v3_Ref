@@ -11,7 +11,7 @@ class DbBanco(Conexao):
         self._conexao = super().conectar()
         self._cursor = super().cursor
         self._conectado = super().dbconectado
-        self._tabelas = ['clientes', 'contas', 'saldo', 'transacao']
+        self._TABELAS = ['clientes', 'contas', 'saldo', 'transacao']
     
     # Inserir registros na tabela 'clientes'
     def inserir_cliente(self, dados: tuple):
@@ -57,7 +57,7 @@ class DbBanco(Conexao):
     # Realiza a consulta das tabelas por chave primaria
     def listar_dados(self, indice: tuple, tabela=None):
         for ind in range(0, 2):
-            if self._tabelas[ind] not in tabela:
+            if self._TABELAS[ind] not in tabela:
                 return
             
         if self._conectado == False:
