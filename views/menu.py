@@ -14,7 +14,7 @@ def menu(clientes, contas):
 
     # Se o usuario tiver conta apaga a posicao de novo usuario da lista de opcoes
     if contas:
-         opcoes_validas[3]
+         del opcoes_validas[3]
 
     for valor in opcoes_validas:
         menu += valor + '\n'
