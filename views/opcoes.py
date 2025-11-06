@@ -1,6 +1,10 @@
 
 # Importar modulo de identacao
-from src.cliente import Cliente, PessoaFisica, Conta, ContaCorrente, Historico, Transacao, Saque, Deposito
+from src.cliente import Cliente, PessoaFisica
+from src.conta import Conta, ContaCorrente
+from src.saque import Saque
+from src.deposito import Deposito
+from src.historico import Historico
 from models.dominio import DbBanco
 from src.validarcpf import filtrarcpf
 
@@ -8,13 +12,13 @@ db = DbBanco()
 
 def filtrar_cliente(cpf):
     cpf = (cpf,)
-    clientes_filtrados = db.listarClientes(indice=cpf)
+    clientes_filtrados = db.listar_dados(indice=cpf)
     return clientes_filtrados if clientes_filtrados else None
 
 
 def recuperar_conta_cliente(id):
     id = (id,)
-    contas_filtradas = db.listarContas(indice=id)
+    contas_filtradas = db.listar_dados(indice=id)
     return contas_filtradas if contas_filtradas else None
 
 
@@ -47,7 +51,7 @@ def sacar(clientes, contas):
 
 def exibir_extrato(clientes, contas):
 
-    saldo_db = db.listarSaldo(contas[0])
+    saldo_db = db.listar_saldo(contas[0])
 
     if not clientes:
         print("\n@@@ Cliente não encontrado! @@@")
@@ -91,7 +95,7 @@ def criar_cliente(clientes: list):
     cliente = PessoaFisica(nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco)
 
     dados_cliente = (nome, cpf, data_nascimento, endereco)
-    resultado_db = db.inserirCliente(dados_cliente) # Metodo do db para inserir registros
+    resultado_db = db.inserir_cliente(dados_cliente) # Metodo do db para inserir registros
     
     if resultado_db == False:
         print("Erro ao cadastrar cliente !")
@@ -121,7 +125,7 @@ def criar_conta(numero_conta, clientes, contas):
 
     agencia = int(1) # Obter o numero da agencia
     dados = (cliente[0], cliente[2], agencia, numero_conta) # Cliente[0] armazena o id do cliente
-    resultado_db = db.inserirConta(dados) # Metodo do db para inserir registros
+    resultado_db = db.inserir_conta(dados) # Metodo do db para inserir registros
 
     if resultado_db == False:
         print("Erro ao cadastrar conta !")
@@ -134,7 +138,7 @@ def criar_conta(numero_conta, clientes, contas):
     print("\n=== Conta criada com sucesso! ===")
 
 def saldo(indice, valor):
-    adicionar_saldo = db.inserirSaldo(indice, valor)
+    adicionar_saldo = db.inserir_saldo(indice, valor)
     return adicionar_saldo
 
 def login(clientes: list, contas: list):
@@ -176,7 +180,7 @@ def excluir_registro(clientes):
 
         if opcao == "S":
             indice = cliente[0]
-            db.excluirRegistro(indice)
+            db.excluir_registro(indice)
             if excluir_registro == False:
                 print("Erro ao excluir dados !")
                 return
