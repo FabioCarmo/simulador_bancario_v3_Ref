@@ -14,7 +14,7 @@ class Conexao():
     # Conectar com a base de dados sqlite3
     def conectar(self):
         try:
-            self._conexaodb = sqlite3.connect(self._enderecodb) # conecta com db
+            self._conexaodb = sqlite3.connect(self._enderecodb, timeout=float(3)) # conecta com db
             self._conectado = True
             self._cursordb = self._conexaodb.cursor()
             return self._conexaodb
