@@ -12,7 +12,7 @@ db = DbBanco()
 
 def filtrar_cliente(cpf):
     cpf = (cpf,)
-    clientes_filtrados = db.listar_dados(indice=cpf)
+    clientes_filtrados = db.listar_dados(indice=cpf, tabela="clientes", condicao="cpf")
     return clientes_filtrados if clientes_filtrados else None
 
 
@@ -51,7 +51,7 @@ def sacar(clientes, contas):
 
 def exibir_extrato(clientes, contas):
 
-    saldo_db = db.listar_saldo(contas[0])
+    saldo_db = db.lista_dados(contas[0])
 
     if not clientes:
         print("\n@@@ Cliente não encontrado! @@@")
