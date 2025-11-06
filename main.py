@@ -3,7 +3,7 @@ from time import sleep
 
 # importar modulos do projeto
 from views.opcoes import depositar, sacar, exibir_extrato,  filtrar_cliente, criar_cliente, criar_conta, \
-login, recuperar_conta_cliente
+login, recuperar_conta_cliente, excluir_registro
 from views.menu import menu
 
 # Funcao principal do sistema
