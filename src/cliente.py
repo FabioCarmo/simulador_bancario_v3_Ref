@@ -1,6 +1,4 @@
 
-from datetime import datetime
-
 # Conjunto de classes usado no projeto
 
 class Cliente:
