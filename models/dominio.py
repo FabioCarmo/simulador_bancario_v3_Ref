@@ -10,18 +10,6 @@ class DbBanco():
         self._conexao = Conexao()
         self._conexao = self._conexao.conectar()
         self._cursor = self._conexao.cursor()
-
-    # Criar as tabelas 'clientes', 'contas', 'saldo' e 'transacao' com suas colunas e atributos
-    def criar_tabela(self):
-        try:
-            self._cursor.execute("CREATE TABLE clientes (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, nome VARCHAR(50) NOT NULL, cpf VARCHAR(15) NOT NULL UNIQUE, data_nascimento DATE NOT NULL, endereco VARCHAR(100) NOT NULL);")
-            self._cursor.execute("CREATE TABLE contas (ID INTEGER NOT NULL, cpf VARCHAR NOT NULL UNIQUE, agencia INTEGER(4) NOT NULL, conta INTEGER(5) NOT NULL)")
-            self._cursor.execute("CREATE TABLE saldo (ID INTEGER NOT NULL, saldo FLOAT(12)  NOT NULL DEFAULT 0.00)")
-            self._cursor.execute("CREATE TABLE transacao(ID INTEGER NOT NULL, tipo VARCHAR(10), valor FLOAT(12) NOT NULL, data DATE)")
-            self._conexao.commit()
-        except:
-            self._conexao.rollback()
-            return False
     
     # Inserir registros na tabela 'clientes'
     def inserirCliente(self, dados):
