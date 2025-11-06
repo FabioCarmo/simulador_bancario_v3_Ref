@@ -2,7 +2,7 @@
 from models.conexaodb import Conexao
 
 # Criar as tabelas 'clientes', 'contas', 'saldo' e 'transacao' com suas colunas e atributos
-def criar_tabela(self):
+def criar_tabela():
     conexao = Conexao()
     conexaodb = conexao.conectar()
     cursor = conexao.cursor
@@ -16,3 +16,6 @@ def criar_tabela(self):
     except:
         conexaodb.rollback()
         return False
+    
+if __name__ == "__main__":
+    criar_tabela()
