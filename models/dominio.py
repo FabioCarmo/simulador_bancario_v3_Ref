@@ -1,6 +1,6 @@
 
 from pathlib import Path
-from managedb.conexaodb import Conexao
+from models.conexaodb import Conexao
 
 # Classe DbBanco para realizar operacoes na base de dados
 
@@ -78,7 +78,7 @@ class DbBanco():
                 return self._cursor.fetchone()
     
     # Excluir registro por chave primaria
-    def excluirRegistro(self, indice):
+    def excluir_registro(self, indice):
 
         tabelas = ["clientes", "contas", "transacao", "saldo"]
         try:
