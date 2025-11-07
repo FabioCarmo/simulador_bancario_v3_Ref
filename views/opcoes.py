@@ -18,40 +18,51 @@ def filtrar_cliente(cpf):
 
 def recuperar_conta_cliente(id):
     id = (id,)
-    contas_filtradas = db.listar_dados(indice=id)
+    contas_filtradas = db.listar_dados(indice=id, tabela="contas", condicao="ID")
     return contas_filtradas if contas_filtradas else None
 
 
 def depositar(clientes, contas):
-    cpf = filtrarcpf(input("Informe o CPF do cliente: "))
+    cpf = filtrarcpf(input("Informe seu CPF para continuar: "))
 
     if cpf != clientes[2]:
         print("\n@@@ Cliente não encontrado! @@@")
         return
+    
+    if not contas:
+        return
 
-    valor = float(input("Informe o valor do depósito: "))
+    valor = float(input("Informe o valor do depósito: ").strip())
     transacao = Deposito(valor)
 
-    saldo(clientes[0], valor)
+    saldo_db = db.listar_dados(indice=contas[0], tabela='saldo', condicao='ID')
+    saldo_atual = round((valor + saldo_db[1]), 2)
+
+    dados = (clientes[0], saldo_atual)
+    saldo(dados)
     transacao.registrar(contas[4])
 
 def sacar(clientes, contas):
-    cpf = filtrarcpf(input("Informe o CPF do cliente: "))
+    cpf = filtrarcpf(input("Informe seu CPF para continuar: "))
 
     if cpf != clientes[2]:
         print("\n@@@ Cliente não encontrado! @@@")
         return
+    
+    if not contas:
+        return
 
-    valor = float(input("Informe o valor do saque: "))
+    valor = float(input("Informe o valor do saque: ").strip())
     transacao = Saque(valor)
 
-    saldo(clientes[0], valor)
+    dados = (clientes[0], valor)
+    saldo(dados)
     transacao.registrar(contas[4])
 
 
 def exibir_extrato(clientes, contas):
 
-    saldo_db = db.lista_dados(contas[0])
+    saldo_db = db.listar_dados(indice=clientes[0], tabela="saldo", condicao="ID")
 
     if not clientes:
         print("\n@@@ Cliente não encontrado! @@@")
@@ -71,12 +82,16 @@ def exibir_extrato(clientes, contas):
             extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
 
     print(extrato)
-    print(f"\nSaldo:\n\tR$ {saldo_db:.2f}")
+    print(f"\nSaldo:\n\tR$ {saldo_db[1]:.2f}")
+
+    press_ok = input("Press Enter ou ok").strip()
+    if len(press_ok) > 0:
+        return
     print("==========================================")
 
 
 def criar_cliente(clientes: list):
-    cpf = input("Informe o CPF (somente número): ")
+    cpf = input("Informe o CPF (somente os 11 digitos): ")
     cpf = filtrarcpf(cpf)
 
     if cpf == False:
@@ -84,9 +99,11 @@ def criar_cliente(clientes: list):
         return
 
     cliente = filtrar_cliente(cpf)
-    if cliente[2] == cpf:
-        print("\n@@@ Já existe cliente com esse CPF! @@@")
-        return
+
+    if cliente != None:
+        if cpf == cliente[2]:
+            print("\n@@@ Já existe cliente com esse CPF! @@@")
+            return
 
     nome = input("Informe o nome completo: ").strip()
     data_nascimento = input("Informe a data de nascimento (aaaa-mm-dd): ").strip()
@@ -137,8 +154,8 @@ def criar_conta(numero_conta, clientes, contas):
 
     print("\n=== Conta criada com sucesso! ===")
 
-def saldo(indice, valor):
-    adicionar_saldo = db.inserir_saldo(indice, valor)
+def saldo(dados):
+    adicionar_saldo = db.inserir_saldo(dados)
     return adicionar_saldo
 
 def login(clientes: list, contas: list):
@@ -156,20 +173,18 @@ def login(clientes: list, contas: list):
         return
 
     conta = recuperar_conta_cliente(cliente[0])
-
-    if (conta):
-        contas.extend([conta[0], conta[1], conta[2], conta[3]])
-
     clientes.extend([cliente[0], cliente[1], cliente[2], cliente[3], cliente[4]])
-    conta = Conta(conta[3], clientes)
-    contas.append([conta])
+
+    if conta != None:
+        contas.extend([conta[0], conta[1], conta[2], conta[3]])
+        conta_obj = Conta(conta[3], clientes)
+        contas.append(conta_obj)
 
     print(f"Bem-vindo de volta, {clientes[1]}.")
 
 
 def excluir_registro(clientes):
-    clientes = list(clientes)
-    cliente = filtrar_cliente(clientes[0])
+    cliente = filtrar_cliente(clientes[2])
 
     if not clientes:
         print("Cliente não encontrado !")
@@ -179,7 +194,7 @@ def excluir_registro(clientes):
         opcao = input("Deseja excluir todos os seus dados ? S ou N (S para sim N para nao)").strip()
 
         if opcao == "S":
-            indice = cliente[0]
+            indice = (cliente[0],)
             db.excluir_registro(indice)
             if excluir_registro == False:
                 print("Erro ao excluir dados !")
