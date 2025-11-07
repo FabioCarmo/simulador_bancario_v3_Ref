@@ -59,16 +59,16 @@ class DbBanco(Conexao):
         if tabela == None:
             return
 
-        for ind in range(0, 2):
-            if self._TABELAS[ind] not in tabela:
-                return
-            
-        if self._conectado == False:
-            super().conectar()
+        tab_encontrado = False
+        for ind in range(len(self._TABELAS)):
+            if self._TABELAS[ind] in tabela:
+                tab_encontrado = True
+        
+        if tab_encontrado == False:
+            return
         
         try:
             self._cursor.execute(f"SELECT * FROM {tabela} WHERE {condicao} = ?;", indice)
-            super().fechar()
             return self._cursor.fetchone()
         except:
             self._conexao.rollback()
