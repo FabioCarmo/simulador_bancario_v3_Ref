@@ -37,6 +37,7 @@ class DbBanco(Conexao):
     # Inserir registros na tabela 'saldo'
     def inserir_saldo(self, dados: tuple):
         try: 
+            self.excluir_registro(indice=(dados[0],), tabela='saldo')
             self._cursor.execute("INSERT INTO saldo(ID, saldo) VALUES(?,?);", dados)
             self._conexao.commit()
             return True
@@ -75,11 +76,10 @@ class DbBanco(Conexao):
             return False
     
     # Excluir registro por chave primaria
-    def excluir_registro(self, indice: tuple):
-        try:
-            for tabela in self._tabelas:
-                self._cursor.execute(f"DELETE FROM {tabela} WHERE ID = ?;", (indice,))
-                self._conexao.commit()
+    def excluir_registro(self, indice: tuple, tabela=None):
+        try:     
+            self._cursor.execute(f"DELETE FROM {tabela} WHERE ID = ?;", indice)
+            self._conexao.commit()
             return True
         except Exception:
             self._conexao.rollback()
