@@ -10,22 +10,23 @@ from src.validarcpf import filtrarcpf
 
 db = DbBanco()
 
+# Retorna os dados de Pessoa Fisica do usuario
 def filtrar_cliente(cpf):
     cpf = (cpf,)
     clientes_filtrados = db.listar_dados(indice=cpf, tabela="clientes", condicao="cpf")
     return clientes_filtrados if clientes_filtrados else None
 
-
+# Retorna os dados de conta do usuario
 def recuperar_conta_cliente(id):
     id = (id,)
     contas_filtradas = db.listar_dados(indice=id, tabela="contas", condicao="ID")
     return contas_filtradas if contas_filtradas else None
 
-
+# Realiza operacao de deposito
 def depositar(clientes, contas):
     cpf = filtrarcpf(input("Informe seu CPF para continuar: "))
 
-    if cpf != clientes[2]:
+    if cpf != clientes['cpf']:
         print("\n@@@ Cliente não encontrado! @@@")
         return
     
@@ -33,19 +34,23 @@ def depositar(clientes, contas):
         return
 
     valor = float(input("Informe o valor do depósito: ").strip())
-    transacao = Deposito(valor)
 
-    saldo_db = db.listar_dados(indice=contas[0], tabela='saldo', condicao='ID')
-    saldo_atual = round((valor + saldo_db[1]), 2)
+    # Recupera a instancia do objeto Conta e PessoaFisica
+    cliente = clientes['Cliente'] # PessoaFisica
+    conta = contas['Conta'] # Conta
+    saldo_atual = conta.saldo + valor
+    # Atualiza a operacao de deposito no objeto e atualiza o saldo
+    cliente.realizar_transacao(conta, Deposito(valor))
 
-    dados = (clientes[0], saldo_atual)
+    # Atualiza o saldo no DB
+    dados = (clientes['id'], saldo_atual)
     saldo(dados)
-    transacao.registrar(contas[4])
 
+# Realiza operacao de saque
 def sacar(clientes, contas):
     cpf = filtrarcpf(input("Informe seu CPF para continuar: "))
 
-    if cpf != clientes[2]:
+    if cpf != clientes['cpf']:
         print("\n@@@ Cliente não encontrado! @@@")
         return
     
@@ -53,16 +58,20 @@ def sacar(clientes, contas):
         return
 
     valor = float(input("Informe o valor do saque: ").strip())
-    transacao = Saque(valor)
+    
+    # Recupera a instancia do obj Conta e PessoaFisica
+    conta = contas['Conta'] # Conta
+    cliente = clientes['Cliente'] # PessoaFisica
+    saldo_atual = conta.saldo - valor
+    # Atualiza a operacao de saque no objeto e atualiza o saldo
+    transacao = cliente.realizar_transacao(conta, Saque(valor))
 
-    dados = (clientes[0], valor)
+    # Atualiza o saldo no DB
+    dados = (clientes['id'], saldo_atual)
     saldo(dados)
-    transacao.registrar(contas[4])
 
-
+# Exibir o historico de transacoes do usuario
 def exibir_extrato(clientes, contas):
-
-    saldo_db = db.listar_dados(indice=clientes[0], tabela="saldo", condicao="ID")
 
     if not clientes:
         print("\n@@@ Cliente não encontrado! @@@")
@@ -81,15 +90,19 @@ def exibir_extrato(clientes, contas):
         for transacao in transacoes:
             extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
 
-    print(extrato)
-    print(f"\nSaldo:\n\tR$ {saldo_db[1]:.2f}")
+    # Recupera o obj Conta
+    conta = contas['Conta']
+    saldo = conta.saldo # Recupera o saldo
 
-    press_ok = input("Press Enter ou ok").strip()
-    if len(press_ok) > 0:
+    print(extrato)
+    print(f"\nSaldo:\tR$ {saldo:.2f}")
+
+    press = input("Press Enter ou ok").strip()
+    if len(press) > 0:
         return
     print("==========================================")
 
-
+# Criar novo cliente
 def criar_cliente(clientes: list):
     cpf = input("Informe o CPF (somente os 11 digitos): ")
     cpf = filtrarcpf(cpf)
@@ -109,21 +122,27 @@ def criar_cliente(clientes: list):
     data_nascimento = input("Informe a data de nascimento (aaaa-mm-dd): ").strip()
     endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ").strip()
 
-    cliente = PessoaFisica(nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco)
+    # Instancia o objeto PessoaFisica
+    clienteobj = PessoaFisica(nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco)
 
     dados_cliente = (nome, cpf, data_nascimento, endereco)
-    resultado_db = db.inserir_cliente(dados_cliente) # Metodo do db para inserir registros
+    res_db = db.inserir_cliente(dados_cliente) # Metodo do db para inserir registros
     
-    if resultado_db == False:
+    if res_db == False:
         print("Erro ao cadastrar cliente !")
         return
 
     cliente = filtrar_cliente(cpf)
-    clientes.extend([cliente[0], cliente[1], cliente[2], cliente[3], cliente[4]])
+    clientes.update({
+                'id': cliente[0], 
+                'nome': clienteobj.nome, 
+                'cpf': clienteobj.cpf, 
+                'Cliente': clienteobj
+            })
 
     print("\n=== Cliente criado com sucesso! ===")
 
-
+# Criar nova conta bancaria do usuário
 def criar_conta(numero_conta, clientes, contas):
     cpf = input("Informe o CPF do cliente: ")
     cpf = filtrarcpf(cpf)
@@ -131,33 +150,42 @@ def criar_conta(numero_conta, clientes, contas):
     if cpf == False:
         print("Cpf invalido !")
         return
-    
-    cliente = filtrar_cliente(cpf)
 
-    if not cliente:
+    if not clientes:
         print("\n@@@ Cliente não encontrado, fluxo de criação de conta encerrado! @@@")
         return
 
-    conta = ContaCorrente.nova_conta(cliente=cpf, numero=numero_conta)
+    # Instancia o objeto com metodo de classe e passa a variavel e posteriormente a lista
+    contaobj = ContaCorrente.nova_conta(cliente=clientes, numero=numero_conta)
 
     agencia = int(1) # Obter o numero da agencia
-    dados = (cliente[0], cliente[2], agencia, numero_conta) # Cliente[0] armazena o id do cliente
+    dados = (clientes['id'], clientes['cpf'], contaobj.agencia, contaobj.numero) # Cliente[0] armazena o id do cliente
     resultado_db = db.inserir_conta(dados) # Metodo do db para inserir registros
 
     if resultado_db == False:
         print("Erro ao cadastrar conta !")
         return
-    else:
-        saldo(cliente[0])
+    
+    dados = (clientes['id'], 0)
+    saldo(dados)
+    contaobj.saldo_atual(0) # Atualiza o saldo atual no obj
 
-    contas.extend([cliente[0], agencia, numero_conta, conta])
+    contas.update({
+                'id': clientes['id'], 
+                'agencia': contaobj.agencia,
+                'numero': contaobj.numero, 
+                'Conta': contaobj
+            })
 
     print("\n=== Conta criada com sucesso! ===")
 
+# Atualiza o saldo da conta
 def saldo(dados):
     adicionar_saldo = db.inserir_saldo(dados)
     return adicionar_saldo
 
+# Realiza o login e instancia o obj
+# Conta e PessoaFisica e passa para a lista para novas operacoes
 def login(clientes: list, contas: list):
     cpf = input("Digite seu cpf: ")
     cpf = filtrarcpf(cpf)
@@ -173,37 +201,55 @@ def login(clientes: list, contas: list):
         return
 
     conta = recuperar_conta_cliente(cliente[0])
-    clientes.extend([cliente[0], cliente[1], cliente[2], cliente[3], cliente[4]])
+
+    # Instancia o objeto PessoaFisica e passa a variavel e posteriormente a lista
+    clienteobj = PessoaFisica(nome=cliente[1], data_nascimento=cliente[3], cpf=cliente[2], endereco=cliente[4])
+    clientes.update({
+                'id': cliente[0], 
+                'nome': clienteobj.nome, 
+                'cpf': clienteobj.cpf, 
+                'Cliente': clienteobj
+                })
 
     if conta != None:
-        contas.extend([conta[0], conta[1], conta[2], conta[3]])
-        conta_obj = Conta(conta[3], clientes)
-        contas.append(conta_obj)
+        contaobj = ContaCorrente(numero=conta[3], cliente=clientes)
+        contas.update({
+                  'id': clientes['id'],
+                  'agencia': contaobj.agencia, 
+                  'numero': contaobj.numero, 
+                  'Conta': contaobj
+                  })
+        
+        conta_saldo = db.listar_dados(indice=(clientes['id'],), tabela="saldo", condicao="ID")
+        contaobj.saldo_atual(conta_saldo[1]) # Atualiza o saldo atual no obj
 
-    print(f"Bem-vindo de volta, {clientes[1]}.")
+    print(f"Bem-vindo de volta, {clientes['nome']}.")
 
-
-def excluir_registro(clientes):
-    cliente = filtrar_cliente(clientes[2])
+# Excluir Registros do usuario
+def excluir_registro(clientes, contas):
 
     if not clientes:
         print("Cliente não encontrado !")
         return 
 
     while True:
-        opcao = input("Deseja excluir todos os seus dados ? S ou N (S para sim N para nao)").strip()
+        opcao = input("Deseja excluir todos os seus dados ? Press 's' ou 'n'").strip().lower()
 
-        if opcao == "S":
-            indice = (cliente[0],)
-            db.excluir_registro(indice)
+        if opcao == 's':
+            TABELAS = ['clientes', 'contas', 'saldo', 'transacao']
+            for i in range(0, 3):
+                excluir_registro = db.excluir_registro(indice=(clientes['id'],), tabela=TABELAS[i])
+
             if excluir_registro == False:
                 print("Erro ao excluir dados !")
                 return
             else:
                 print("Seus dados foram excluidos com sucesso!")
+                clientes.clear()
+                contas.clear()
                 return 
             
-        elif opcao == "N":
+        elif opcao == 'n':
             return
 
         else:
