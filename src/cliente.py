@@ -5,12 +5,13 @@ class Cliente:
     def __init__(self, endereco):
         self.endereco = endereco
         self.contas = []
+        self.clientes = []
 
     def realizar_transacao(self, conta, transacao):
         transacao.registrar(conta)
 
-    def adicionar_conta(self, conta):
-        self.contas.append(conta)
+    def adicionar_cliente(self, cliente):
+        self.clientes.append(cliente)
 
 class PessoaFisica(Cliente):
     def __init__(self, nome, data_nascimento, cpf, endereco):
