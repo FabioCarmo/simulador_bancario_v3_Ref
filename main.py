@@ -8,8 +8,8 @@ from views.menu import menu
 
 # Funcao principal do sistema
 def main():
-    clientes = []
-    contas = []
+    clientes = {}
+    contas = {}
 
     while True:
         opcao = menu(clientes, contas)
@@ -45,9 +45,11 @@ def main():
                 numero_conta = int(numero_conta)
                 criar_conta(numero_conta, clientes, contas)
             elif opcao == '9':
-                excluir_registro(clientes)
+                excluir_registro(clientes, contas)
                 sleep(3)
             elif opcao == '0':
+                del clientes
+                del contas
                 print('Encerrando...')
                 sleep(2)
                 break

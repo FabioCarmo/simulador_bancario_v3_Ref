@@ -38,4 +38,6 @@ class Conexao():
     @property   
     def dbconectado(self):
         return self._conectado
-        
+
+if __name__ == '__main__':
+    Conexao().conectar()
