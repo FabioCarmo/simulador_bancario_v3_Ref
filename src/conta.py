@@ -1,6 +1,7 @@
 
 from src.historico import Historico
 from src.saque import Saque
+from models.dominio import DbBanco
 
 class Conta:
     def __init__(self, numero, cliente):
@@ -13,6 +14,9 @@ class Conta:
     @classmethod
     def nova_conta(cls, cliente, numero):
         return cls(numero, cliente)
+    
+    def saldo_atual(self, saldo):
+        self._saldo = round(saldo, 2)
 
     @property
     def saldo(self):
@@ -42,7 +46,7 @@ class Conta:
             print("\n@@@ Operação falhou! Você não tem saldo suficiente. @@@")
 
         elif valor > 0:
-            self._saldo -= valor
+            self.saldo_atual(self.saldo-valor)
             print("\n=== Saque realizado com sucesso! ===")
             return True
 
@@ -53,13 +57,12 @@ class Conta:
 
     def depositar(self, valor):
         if valor > 0:
-            self._saldo += valor
+            self.saldo_atual(self.saldo + valor)
             print("\n=== Depósito realizado com sucesso! ===")
+            return True
         else:
             print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
             return False
-
-        return True
 
 class ContaCorrente(Conta):
     def __init__(self, numero, cliente, limite=500, limite_saques=3):
