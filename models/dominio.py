@@ -61,7 +61,7 @@ class DbBanco(Conexao):
             return
 
         tab_encontrado = False
-        for ind in range(len(self._TABELAS)):
+        for ind in range(0, 4):
             if self._TABELAS[ind] in tabela:
                 tab_encontrado = True
         
@@ -78,6 +78,14 @@ class DbBanco(Conexao):
     # Excluir registro por chave primaria
     def excluir_registro(self, indice: tuple, tabela=None):
         try:     
+            tab_encontrado = False
+            for ind in range(0, 3):
+                if self._TABELAS[ind] in tabela:
+                    tab_encontrado = True
+        
+            if tab_encontrado == False:
+                return
+            
             self._cursor.execute(f"DELETE FROM {tabela} WHERE ID = ?;", indice)
             self._conexao.commit()
             return True
